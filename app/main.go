@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"io"
-	"zlib"
+	"compress/zlib"
 )
 
 // Usage: your_program.sh <command> <arg1> <arg2> ...
