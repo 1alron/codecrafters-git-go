@@ -39,20 +39,19 @@ func main() {
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "error when reading from file")
 				return
-			} else {
-				r, err := zlib.NewReader(file)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "error when reading from file")
-				}
-				data, err := io.ReadAll(r)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "error when reading from file")
-				}
-
-				defer r.Close()
-				idx := bytes.IndexByte(data, 0)
-				fmt.Print(string(data[idx+1:]))
+			} 
+			r, err := zlib.NewReader(file)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error when reading from file")
 			}
+			data, err := io.ReadAll(r)
+			r.Close()
+			file.Close()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error when reading from file")
+			}
+			idx := bytes.IndexByte(data, 0)
+			fmt.Print(string(data[idx+1:]))
 			defer file.Close()
 		} else {
 			fmt.Fprintf(os.Stderr, "unknown options to cat-file")
