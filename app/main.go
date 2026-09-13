@@ -34,28 +34,39 @@ func main() {
 		fmt.Println("Initialized git directory")
 
 	case "cat-file":
-		if flag, hash := os.Args[2], os.Args[3]; flag == "-p" {
-			file, err := os.Open(fmt.Sprintf(".git/objects/%s/%s", hash[:2], hash[2:]))
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "error when reading from file")
-				return
-			} 
-			r, err := zlib.NewReader(file)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "error when reading from file")
-			}
-			data, err := io.ReadAll(r)
-			r.Close()
-			file.Close()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "error when reading from file")
-			}
-			idx := bytes.IndexByte(data, 0)
-			fmt.Print(string(data[idx+1:]))
-			defer file.Close()
-		} else {
+		flag, hash := os.Args[2], os.Args[3]
+		if flag != "-p" {
 			fmt.Fprintf(os.Stderr, "unknown options to cat-file")
+			os.Exit(1)
 		}
+
+		file, err := os.Open(fmt.Sprintf(".git/objects/%s/%s", hash[:2], hash[2:]))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error opening file: %v\n", err)
+			os.Exit(1)
+		}
+		defer file.Close()
+
+		r, err := zlib.NewReader(file)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error creating zlib reader: %v\n", err)
+			os.Exit(1)
+		}
+		defer r.Close()
+
+		data, err := io.ReadAll(r)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error reading decompressed data: %v\n", err)
+			os.Exit(1)
+		}
+
+		idx := bytes.IndexByte(data, 0)
+		if idx == -1 {
+			fmt.Fprintf(os.Stderr, "invalid object format: no null byte found")
+			os.Exit(1)
+		}
+		
+		fmt.Print(string(data[idx+1:]))
 
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command %s\n", command)
