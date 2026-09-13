@@ -1,10 +1,11 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"io"
+	"bytes"
 	"compress/zlib"
+	"fmt"
+	"io"
+	"os"
 )
 
 // Usage: your_program.sh <command> <arg1> <arg2> ...
@@ -24,14 +25,14 @@ func main() {
 				fmt.Fprintf(os.Stderr, "Error creating directory: %s\n", err)
 			}
 		}
-		
+
 		headFileContents := []byte("ref: refs/heads/main\n")
 		if err := os.WriteFile(".git/HEAD", headFileContents, 0644); err != nil {
 			fmt.Fprintf(os.Stderr, "Error writing file: %s\n", err)
 		}
-		
+
 		fmt.Println("Initialized git directory")
-		
+
 	case "cat-file":
 		if flag, hash := os.Args[2], os.Args[3]; flag == "-p" {
 			file, err := os.Open(fmt.Sprintf(".git/objects/%s/%s", hash[:2], hash[2:]))
@@ -49,12 +50,13 @@ func main() {
 				}
 
 				defer r.Close()
-				fmt.Println(string(data))				
+				idx := bytes.IndexByte(data, 0)
+				fmt.Print(string(data[idx+1:]))
 			}
 			defer file.Close()
 		} else {
 			fmt.Fprintf(os.Stderr, "unknown options to cat-file")
-		} 	
+		}
 
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command %s\n", command)
